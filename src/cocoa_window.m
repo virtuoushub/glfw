@@ -1213,6 +1213,10 @@ void _glfwPlatformPostEmptyEvent(void)
     [NSApp postEvent:event atStart:YES];
 }
 
+void _glfwPlatformSetTouchInput(_GLFWwindow* window, int enabled)
+{
+}
+
 void _glfwPlatformSetCursorPos(_GLFWwindow* window, double x, double y)
 {
     updateModeCursor(window);
