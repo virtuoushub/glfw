@@ -88,26 +88,26 @@ static GLboolean initLibraries(void)
     }
 
     _glfw.win32.user32.instance = LoadLibraryW(L"user32.dll");
-    if (_glfw.win32.user32.instance)
-    {
-        _glfw.win32.user32.SetProcessDPIAware = (SETPROCESSDPIAWARE_T)
-            GetProcAddress(_glfw.win32.user32.instance, "SetProcessDPIAware");
-        _glfw.win32.user32.ChangeWindowMessageFilterEx = (CHANGEWINDOWMESSAGEFILTEREX_T)
-            GetProcAddress(_glfw.win32.user32.instance, "ChangeWindowMessageFilterEx");
-        _glfw.win32.user32.GetTouchInputInfo = (GETTOUCHINPUTINFO_T)
-            GetProcAddress(_glfw.win32.user32.instance, "GetTouchInputInfo");
-        _glfw.win32.user32.CloseTouchInputHandle = (CLOSETOUCHINPUTHANDLE_T)
-            GetProcAddress(_glfw.win32.user32.instance, "CloseTouchInputHandle");
-        _glfw.win32.user32.RegisterTouchWindow = (REGISTERTOUCHWINDOW_T)
-            GetProcAddress(_glfw.win32.user32.instance, "RegisterTouchWindow");
-        _glfw.win32.user32.UnregisterTouchWindow = (UNREGISTERTOUCHWINDOW_T)
-            GetProcAddress(_glfw.win32.user32.instance, "UnregisterTouchWindow");
-    }
+    if (!_glfw.win32.user32.instance)
+        return GL_FALSE;
 
-    if (_glfw.win32.touch.GetTouchInputInfo &&
-        _glfw.win32.touch.CloseTouchInputHandle &&
-        _glfw.win32.touch.RegisterTouchWindow &&
-        _glfw.win32.touch.UnregisterTouchWindow)
+    _glfw.win32.user32.SetProcessDPIAware = (SETPROCESSDPIAWARE_T)
+        GetProcAddress(_glfw.win32.user32.instance, "SetProcessDPIAware");
+    _glfw.win32.user32.ChangeWindowMessageFilterEx = (CHANGEWINDOWMESSAGEFILTEREX_T)
+        GetProcAddress(_glfw.win32.user32.instance, "ChangeWindowMessageFilterEx");
+    _glfw.win32.user32.GetTouchInputInfo = (GETTOUCHINPUTINFO_T)
+        GetProcAddress(_glfw.win32.user32.instance, "GetTouchInputInfo");
+    _glfw.win32.user32.CloseTouchInputHandle = (CLOSETOUCHINPUTHANDLE_T)
+        GetProcAddress(_glfw.win32.user32.instance, "CloseTouchInputHandle");
+    _glfw.win32.user32.RegisterTouchWindow = (REGISTERTOUCHWINDOW_T)
+        GetProcAddress(_glfw.win32.user32.instance, "RegisterTouchWindow");
+    _glfw.win32.user32.UnregisterTouchWindow = (UNREGISTERTOUCHWINDOW_T)
+        GetProcAddress(_glfw.win32.user32.instance, "UnregisterTouchWindow");
+
+    if (_glfw.win32.user32.GetTouchInputInfo &&
+        _glfw.win32.user32.CloseTouchInputHandle &&
+        _glfw.win32.user32.RegisterTouchWindow &&
+        _glfw.win32.user32.UnregisterTouchWindow)
     {
         _glfw.win32.touch.available = GL_TRUE;
     }
