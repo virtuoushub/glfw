@@ -31,6 +31,8 @@
 #include <unistd.h>
 #include <signal.h>
 #include <stdint.h>
+#include <regex.h>
+
 #include <X11/Xlib.h>
 #include <X11/keysym.h>
 #include <X11/Xatom.h>
@@ -201,6 +203,14 @@ typedef struct _GLFWlibraryX11
     struct {
         Window      source;
     } xdnd;
+
+#if defined(__linux__)
+    struct {
+      int           fd;
+      int           wd;
+      regex_t       regex;
+    } inotify;
+#endif
 
 } _GLFWlibraryX11;
 

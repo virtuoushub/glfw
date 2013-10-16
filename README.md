@@ -109,6 +109,8 @@ GLFW bundles a number of dependencies in the `deps/` directory.
  - [X11] Bugfix: Workaround for legacy Compiz caused flickering during resize
  - [X11] Bugfix: The name pointer of joysticks were not cleared on disconnection
  - [X11] Bugfix: Video mode dimensions were not rotated to match the CRTC
+ - [X11] Bugfix: Joysticks connected after `glfwInit` were not detected
+                 (temporary inotify solution until proper libudev solution)
 
 
 ## Contact
