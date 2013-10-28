@@ -1161,6 +1161,12 @@ void _glfwPlatformHideWindow(_GLFWwindow* window)
     _glfwInputWindowVisibility(window, GL_FALSE);
 }
 
+void _glfwPlatformSetWindowMonitor(_GLFWwindow* window,
+                                   _GLFWmonitor* monitor,
+                                   int width, int height)
+{
+}
+
 void _glfwPlatformPollEvents(void)
 {
     for (;;)
