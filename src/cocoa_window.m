@@ -1238,6 +1238,11 @@ void _glfwPlatformApplyCursorMode(_GLFWwindow* window)
     }
     else
         CGAssociateMouseAndMouseCursorPosition(true);
+
+    if (window->cursorMode == GLFW_CURSOR_CAPTURED)
+    {
+        // TODO: Implement cursor capture
+    }
 }
 
 int _glfwPlatformCreateCursor(_GLFWcursor* cursor,
