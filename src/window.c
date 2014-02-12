@@ -488,6 +488,19 @@ GLFWAPI void glfwGetFramebufferSize(GLFWwindow* handle, int* width, int* height)
     _glfwPlatformGetFramebufferSize(window, width, height);
 }
 
+GLFWAPI void glfwSetWindowIcons(GLFWwindow* handle, GLFWimage* icons, int numicons)
+{
+    _GLFWwindow* window = (_GLFWwindow*) handle;
+    _GLFW_REQUIRE_INIT();
+
+    if (numicons < 1)
+    {
+        return;
+    }
+
+    _glfwPlatformSetWindowIcons(window, icons, numicons);
+}
+
 GLFWAPI void glfwIconifyWindow(GLFWwindow* handle)
 {
     _GLFWwindow* window = (_GLFWwindow*) handle;
