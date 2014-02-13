@@ -41,6 +41,9 @@
 // The XRandR extension provides mode setting and gamma control
 #include <X11/extensions/Xrandr.h>
 
+// The XSync extension provides sync
+#include <X11/extensions/sync.h>
+
 // The XInput2 extension provides improved input events
 #include <X11/extensions/XInput2.h>
 
@@ -114,6 +117,7 @@ typedef struct _GLFWlibraryX11
     Atom            NET_WM_ICON_NAME;
     Atom            NET_WM_PID;
     Atom            NET_WM_PING;
+    Atom            NET_WM_SYNC_REQUEST;
     Atom            NET_WM_STATE;
     Atom            NET_WM_STATE_FULLSCREEN;
     Atom            NET_WM_BYPASS_COMPOSITOR;
@@ -164,6 +168,14 @@ typedef struct _GLFWlibraryX11
         GLboolean   gammaBroken;
         GLboolean   monitorBroken;
     } randr;
+
+    struct {
+        GLboolean   available;
+        int         eventBase;
+        int         errorBase;
+        int         majorVersion;
+        int         minorVersion;
+    } sync;
 
     struct {
         int         majorOpcode;

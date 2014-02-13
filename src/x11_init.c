@@ -413,6 +413,8 @@ static void detectEWMH(void)
         getSupportedAtom(supportedAtoms, atomCount, "_NET_WM_PID");
     _glfw.x11.NET_WM_PING =
         getSupportedAtom(supportedAtoms, atomCount, "_NET_WM_PING");
+    _glfw.x11.NET_WM_SYNC_REQUEST =
+        getSupportedAtom(supportedAtoms, atomCount, "_NET_WM_SYNC_REQUEST");
     _glfw.x11.NET_ACTIVE_WINDOW =
         getSupportedAtom(supportedAtoms, atomCount, "_NET_ACTIVE_WINDOW");
     _glfw.x11.NET_WM_BYPASS_COMPOSITOR =
@@ -470,6 +472,18 @@ static GLboolean initExtensions(void)
         {
             _glfw.x11.randr.available = GL_FALSE;
         }
+    }
+
+    _glfw.x11.sync.available =
+        XSyncQueryExtension(_glfw.x11.display,
+                            &_glfw.x11.sync.eventBase,
+                            &_glfw.x11.sync.errorBase);
+
+    if (_glfw.x11.sync.available)
+    {
+        XSyncInitialize(_glfw.x11.display,
+                        &_glfw.x11.sync.majorVersion,
+                        &_glfw.x11.sync.minorVersion);
     }
 
     if (XQueryExtension(_glfw.x11.display,
