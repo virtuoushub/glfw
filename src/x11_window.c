@@ -1234,9 +1234,9 @@ void _glfwPlatformGetFramebufferSize(_GLFWwindow* window, int* width, int* heigh
     _glfwPlatformGetWindowSize(window, width, height);
 }
 
-void _glfwPlatformSetWindowIcons(_GLFWwindow* window, GLFWimage *icons, int numicons)
+void _glfwPlatformSetWindowIcons(_GLFWwindow* window, GLFWimage* icons, int numicons)
 {
-    /* TODO: implement this */
+    // TODO: Implement this
 }
 
 void _glfwPlatformIconifyWindow(_GLFWwindow* window)
