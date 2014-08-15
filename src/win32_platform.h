@@ -64,6 +64,7 @@
 
 #include <windows.h>
 #include <mmsystem.h>
+#include <xinput.h>
 #include <dbt.h>
 
 #if defined(_MSC_VER)
@@ -106,18 +107,18 @@ typedef struct tagCHANGEFILTERSTRUCT
 
 
 //========================================================================
-// DLLs that are loaded at glfwInit()
+// Functions that are loaded at initialization
 //========================================================================
 
 // winmm.dll function pointer typedefs
-typedef MMRESULT (WINAPI * JOYGETDEVCAPS_T)(UINT,LPJOYCAPS,UINT);
-typedef MMRESULT (WINAPI * JOYGETPOS_T)(UINT,LPJOYINFO);
-typedef MMRESULT (WINAPI * JOYGETPOSEX_T)(UINT,LPJOYINFOEX);
 typedef DWORD (WINAPI * TIMEGETTIME_T)(void);
-#define _glfw_joyGetDevCaps _glfw.win32.winmm.joyGetDevCaps
-#define _glfw_joyGetPos _glfw.win32.winmm.joyGetPos
-#define _glfw_joyGetPosEx _glfw.win32.winmm.joyGetPosEx
 #define _glfw_timeGetTime _glfw.win32.winmm.timeGetTime
+
+// xinput.dll function pointer typedefs
+typedef DWORD (WINAPI * XINPUTGETCAPABILITIES_T)(DWORD,DWORD,XINPUT_CAPABILITIES*);
+typedef DWORD (WINAPI * XINPUTGETSTATE_T)(DWORD,XINPUT_STATE*);
+#define _glfw_XInputGetCapabilities _glfw.win32.xinput.XInputGetCapabilities
+#define _glfw_XInputGetState _glfw.win32.xinput.XInputGetState
 
 // user32.dll function pointer typedefs
 typedef BOOL (WINAPI * SETPROCESSDPIAWARE_T)(void);
@@ -151,7 +152,7 @@ typedef HRESULT (WINAPI * DWMISCOMPOSITIONENABLED_T)(BOOL*);
  #error "No supported context creation API selected"
 #endif
 
-#include "winmm_joystick.h"
+#include "dxi_joystick.h"
 
 #define _GLFW_PLATFORM_WINDOW_STATE         _GLFWwindowWin32  win32
 #define _GLFW_PLATFORM_LIBRARY_WINDOW_STATE _GLFWlibraryWin32 win32
@@ -195,11 +196,15 @@ typedef struct _GLFWlibraryWin32
     // winmm.dll
     struct {
         HINSTANCE       instance;
-        JOYGETDEVCAPS_T joyGetDevCaps;
-        JOYGETPOS_T     joyGetPos;
-        JOYGETPOSEX_T   joyGetPosEx;
         TIMEGETTIME_T   timeGetTime;
     } winmm;
+
+    // xinput.dll
+    struct {
+        HINSTANCE       instance;
+        XINPUTGETCAPABILITIES_T XInputGetCapabilities;
+        XINPUTGETSTATE_T XInputGetState;
+    } xinput;
 
     // user32.dll
     struct {
