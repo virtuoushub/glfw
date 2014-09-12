@@ -252,18 +252,22 @@ _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
 
     *count = 0;
 
-    CGGetActiveDisplayList(0, NULL, &displayCount);
+    CGGetOnlineDisplayList(0, NULL, &displayCount);
 
     displays = calloc(displayCount, sizeof(CGDirectDisplayID));
     monitors = calloc(displayCount, sizeof(_GLFWmonitor*));
 
-    CGGetActiveDisplayList(displayCount, displays, &displayCount);
+    CGGetOnlineDisplayList(displayCount, displays, &displayCount);
 
     NSArray* screens = [NSScreen screens];
 
     for (i = 0;  i < displayCount;  i++)
     {
         int j;
+
+        if (CGDisplayIsAsleep(displays[i]))
+            continue;
+
         const CGSize size = CGDisplayScreenSize(displays[i]);
         char* name = getDisplayName(displays[i]);
 
