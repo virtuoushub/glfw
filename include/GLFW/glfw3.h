@@ -1077,6 +1077,23 @@ GLFWAPI GLFWmonitor** glfwGetMonitors(int* count);
  */
 GLFWAPI GLFWmonitor* glfwGetPrimaryMonitor(void);
 
+/*! @brief Returns the monitor mirrored by the specified monitor.
+ *
+ *  This function returns the monitor that the specified monitor mirrors.
+ *
+ *  @param[in] monitor The monitor to query.
+ *  @return The monitor mirrored by the specified monitor, or `NULL` if the
+ *  monitor does not mirror another monitor or an error occurred.  Errors are
+ *  reported to the [error callback](@ref intro_error).
+ *
+ *  @note This function may only be called from the main thread.
+ *
+ *  @sa glfwGetMonitors
+ *
+ *  @ingroup monitor
+ */
+GLFWAPI GLFWmonitor* glfwGetMirroredMonitor(GLFWmonitor* monitor);
+
 /*! @brief Returns the position of the monitor's viewport on the virtual screen.
  *
  *  This function returns the position, in screen coordinates, of the upper-left

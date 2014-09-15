@@ -103,10 +103,9 @@ void _glfwRestoreVideoMode(_GLFWmonitor* monitor)
 
 _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
 {
-    int size = 0, found = 0;
+    int size = 0, found = 0, primaryIndex = 0, mirroring;
     _GLFWmonitor** monitors = NULL;
     DWORD adapterIndex, displayIndex;
-    int primaryIndex = 0;
 
     *count = 0;
 
@@ -148,10 +147,13 @@ _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
                 monitors = (_GLFWmonitor**) realloc(monitors, sizeof(_GLFWmonitor*) * size);
             }
 
+            if (displayIndex == 0)
+                mirroring = -1;
+
             name = _glfwCreateUTF8FromWideString(display.DeviceString);
             if (!name)
             {
-                _glfwFreeMonitors(monitors, found);
+                _glfwDestroyMonitors(monitors, found);
                 _glfwInputError(GLFW_PLATFORM_ERROR,
                                 "Failed to convert string to UTF-8");
 
@@ -161,12 +163,16 @@ _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
 
             dc = CreateDCW(L"DISPLAY", adapter.DeviceName, NULL, NULL);
 
-            monitors[found] = _glfwAllocMonitor(name,
-                                                GetDeviceCaps(dc, HORZSIZE),
-                                                GetDeviceCaps(dc, VERTSIZE));
+            monitors[found] = _glfwCreateMonitor(name,
+                                                 GetDeviceCaps(dc, HORZSIZE),
+                                                 GetDeviceCaps(dc, VERTSIZE),
+                                                 mirroring);
 
             DeleteDC(dc);
             free(name);
+
+            if (displayIndex == 0)
+                mirroring = found;
 
             wcscpy(monitors[found]->win32.adapterName, adapter.DeviceName);
             wcscpy(monitors[found]->win32.displayName, display.DeviceName);

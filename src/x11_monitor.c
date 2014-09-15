@@ -248,8 +248,8 @@ _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
                 continue;
             }
 
-            monitors[found] = _glfwAllocMonitor(oi->name,
-                                                oi->mm_width, oi->mm_height);
+            monitors[found] = _glfwCreateMonitor(oi->name,
+                                                 oi->mm_width, oi->mm_height);
 
             monitors[found]->x11.output = output;
             monitors[found]->x11.crtc   = oi->crtc;
@@ -287,11 +287,11 @@ _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
     if (!monitors)
     {
         monitors = calloc(1, sizeof(_GLFWmonitor*));
-        monitors[0] = _glfwAllocMonitor("Display",
-                                        DisplayWidthMM(_glfw.x11.display,
-                                                       _glfw.x11.screen),
-                                        DisplayHeightMM(_glfw.x11.display,
-                                                        _glfw.x11.screen));
+        monitors[0] = _glfwCreateMonitor("Display",
+                                         DisplayWidthMM(_glfw.x11.display,
+                                                        _glfw.x11.screen),
+                                         DisplayHeightMM(_glfw.x11.display,
+                                                         _glfw.x11.screen));
         found = 1;
     }
 
