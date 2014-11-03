@@ -55,7 +55,7 @@ static void setCursorMode(_GLFWwindow* window, int newMode)
 
     window->cursorMode = newMode;
 
-    if (window == _glfw.focusedWindow)
+    if (_glfwPlatformWindowFocused(window))
     {
         if (oldMode == GLFW_CURSOR_DISABLED)
         {
@@ -344,7 +344,7 @@ GLFWAPI void glfwSetCursorPos(GLFWwindow* handle, double xpos, double ypos)
 
     _GLFW_REQUIRE_INIT();
 
-    if (_glfw.focusedWindow != window)
+    if (!_glfwPlatformWindowFocused(window))
         return;
 
     // Don't do anything if the cursor position did not change

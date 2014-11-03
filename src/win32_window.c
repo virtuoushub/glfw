@@ -432,84 +432,31 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
             break;
         }
 
-        case WM_ACTIVATE:
+        case WM_SETFOCUS:
         {
-            // Window was (de)focused and/or (de)iconified
+            if (window->cursorMode != GLFW_CURSOR_NORMAL)
+                _glfwPlatformApplyCursorMode(window);
 
-            BOOL focused = LOWORD(wParam) != WA_INACTIVE;
-            BOOL iconified = HIWORD(wParam) ? TRUE : FALSE;
+            if (window->monitor && window->autoIconify)
+                enterFullscreenMode(window);
 
-            if (focused && iconified)
-            {
-                if (window->iconified && _glfw.focusedWindow != window)
-                {
-                    // This is a workaround for window restoration using the
-                    // Win+D hot key leading to windows being told they're
-                    // focused and iconified and then never told they're
-                    // restored
-                    iconified = FALSE;
-                }
-                else
-                {
-                    // This is a workaround for window iconification using the
-                    // taskbar leading to windows being told they're focused and
-                    // iconified and then never told they're defocused
-                    focused = FALSE;
-                }
-            }
-
-            if (!focused && _glfw.focusedWindow == window)
-            {
-                // The window was defocused (or iconified, see above)
-
-                if (window->cursorMode != GLFW_CURSOR_NORMAL)
-                    restoreCursor(window);
-
-                if (window->monitor && window->autoIconify)
-                {
-                    if (!iconified)
-                    {
-                        // Iconify the (on top, borderless, oddly positioned)
-                        // window or the user will be annoyed
-                        _glfwPlatformIconifyWindow(window);
-                    }
-
-                    leaveFullscreenMode(window);
-                }
-            }
-            else if (focused && _glfw.focusedWindow != window)
-            {
-                // The window was focused
-
-                if (window->cursorMode != GLFW_CURSOR_NORMAL)
-                    _glfwPlatformApplyCursorMode(window);
-
-                if (window->monitor && window->autoIconify)
-                    enterFullscreenMode(window);
-            }
-
-            _glfwInputWindowFocus(window, focused);
-            _glfwInputWindowIconify(window, iconified);
+            _glfwInputWindowFocus(window, GL_TRUE);
             return 0;
         }
 
-        case WM_ACTIVATEAPP:
+        case WM_KILLFOCUS:
         {
-            if (!wParam && IsIconic(hWnd))
+            if (window->cursorMode != GLFW_CURSOR_NORMAL)
+                restoreCursor(window);
+
+            if (window->monitor && window->autoIconify)
             {
-                // This is a workaround for full screen windows losing focus
-                // through Alt+Tab leading to windows being told they're
-                // unfocused and restored and then never told they're iconified
-                _glfwInputWindowIconify(window, GL_TRUE);
+                _glfwPlatformIconifyWindow(window);
+                leaveFullscreenMode(window);
             }
 
+            _glfwInputWindowFocus(window, GL_FALSE);
             return 0;
-        }
-
-        case WM_SHOWWINDOW:
-        {
-            _glfwInputWindowVisibility(window, wParam ? GL_TRUE : GL_FALSE);
-            break;
         }
 
         case WM_SYSCOMMAND:
@@ -677,7 +624,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
 
                 if (window->cursorMode == GLFW_CURSOR_DISABLED)
                 {
-                    if (_glfw.focusedWindow != window)
+                    if (!_glfwPlatformWindowFocused(window))
                         return 0;
 
                     x = newCursorX - window->win32.oldCursorX;
@@ -735,7 +682,12 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
 
         case WM_SIZE:
         {
-            if (_glfw.focusedWindow == window)
+            if (wParam == SIZE_MINIMIZED)
+                _glfwInputWindowIconify(window, GL_TRUE);
+            else if (wParam == SIZE_RESTORED)
+                _glfwInputWindowIconify(window, GL_FALSE);
+
+            if (_glfwPlatformWindowFocused(window))
             {
                 if (window->cursorMode == GLFW_CURSOR_DISABLED)
                     updateClipRect(window);
@@ -748,7 +700,7 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
 
         case WM_MOVE:
         {
-            if (_glfw.focusedWindow == window)
+            if (_glfwPlatformWindowFocused(window))
             {
                 if (window->cursorMode == GLFW_CURSOR_DISABLED)
                     updateClipRect(window);
@@ -775,7 +727,8 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
 
         case WM_SETCURSOR:
         {
-            if (_glfw.focusedWindow == window && LOWORD(lParam) == HTCLIENT)
+            if (LOWORD(lParam) == HTCLIENT &&
+                _glfwPlatformWindowFocused(window))
             {
                 if (window->cursorMode == GLFW_CURSOR_HIDDEN ||
                     window->cursorMode == GLFW_CURSOR_DISABLED)
@@ -1211,9 +1164,25 @@ void _glfwPlatformHideWindow(_GLFWwindow* window)
     ShowWindow(window->win32.handle, SW_HIDE);
 }
 
+int _glfwPlatformWindowFocused(_GLFWwindow* window)
+{
+    return window->win32.handle == GetActiveWindow();
+}
+
+int _glfwPlatformWindowIconified(_GLFWwindow* window)
+{
+    return IsIconic(window->win32.handle);
+}
+
+int _glfwPlatformWindowVisible(_GLFWwindow* window)
+{
+    return IsWindowVisible(window->win32.handle);
+}
+
 void _glfwPlatformPollEvents(void)
 {
     MSG msg;
+    HWND handle;
     _GLFWwindow* window;
 
     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
@@ -1236,9 +1205,11 @@ void _glfwPlatformPollEvents(void)
         }
     }
 
-    window = _glfw.focusedWindow;
-    if (window)
+    handle = GetActiveWindow();
+    if (handle)
     {
+        window = (_GLFWwindow*) GetWindowLongPtrW(handle, 0);
+
         // LSHIFT/RSHIFT fixup (keys tend to "stick" without this fix)
         // This is the only async event handling in GLFW, but it solves some
         // nasty problems
@@ -1386,7 +1357,8 @@ void _glfwPlatformSetCursor(_GLFWwindow* window, _GLFWcursor* cursor)
     // the following condition is not met. That way it should be safe to destroy the
     // cursor after calling glfwSetCursor(window, NULL) on all windows using the cursor.
 
-    if (window->cursorMode == GLFW_CURSOR_NORMAL && _glfw.focusedWindow == window &&
+    if (_glfwPlatformWindowFocused(window) &&
+        window->cursorMode == GLFW_CURSOR_NORMAL &&
         window->win32.cursorInside)
     {
         if (cursor)

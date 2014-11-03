@@ -55,6 +55,38 @@ typedef struct
 #define MWM_HINTS_DECORATIONS (1L << 1)
 
 
+// Returns whether the window is iconified
+//
+static int getWindowState(_GLFWwindow* window)
+{
+    int result = WithdrawnState;
+    struct {
+        CARD32 state;
+        Window icon;
+    } *state = NULL;
+
+    if (_glfwGetWindowProperty(window->x11.handle,
+                               _glfw.x11.WM_STATE,
+                               _glfw.x11.WM_STATE,
+                               (unsigned char**) &state) >= 2)
+    {
+        result = state->state;
+    }
+
+    XFree(state);
+    return result;
+}
+
+// Returns the handle of the window with input focus
+//
+static Window getFocusedWindow(void)
+{
+    Window focused;
+    int state;
+    XGetInputFocus(_glfw.x11.display, &focused, &state);
+    return focused;
+}
+
 // Returns whether the event is a selection event
 //
 static Bool isFrameExtentsEvent(Display* display, XEvent* event, XPointer pointer)
@@ -1026,7 +1058,7 @@ static void processEvent(XEvent *event)
 
                 if (window->cursorMode == GLFW_CURSOR_DISABLED)
                 {
-                    if (_glfw.focusedWindow != window)
+                    if (!_glfwPlatformWindowFocused(window))
                         break;
 
                     x = event->xmotion.x - window->x11.cursorPosX;
@@ -1202,18 +1234,6 @@ static void processEvent(XEvent *event)
             break;
         }
 
-        case MapNotify:
-        {
-            _glfwInputWindowVisibility(window, GL_TRUE);
-            break;
-        }
-
-        case UnmapNotify:
-        {
-            _glfwInputWindowVisibility(window, GL_FALSE);
-            break;
-        }
-
         case FocusIn:
         {
             if (event->xfocus.mode == NotifyNormal)
@@ -1251,23 +1271,11 @@ static void processEvent(XEvent *event)
             if (event->xproperty.atom == _glfw.x11.WM_STATE &&
                 event->xproperty.state == PropertyNewValue)
             {
-                struct {
-                    CARD32 state;
-                    Window icon;
-                } *state = NULL;
-
-                if (_glfwGetWindowProperty(window->x11.handle,
-                                           _glfw.x11.WM_STATE,
-                                           _glfw.x11.WM_STATE,
-                                           (unsigned char**) &state) >= 2)
-                {
-                    if (state->state == IconicState)
-                        _glfwInputWindowIconify(window, GL_TRUE);
-                    else if (state->state == NormalState)
-                        _glfwInputWindowIconify(window, GL_FALSE);
-                }
-
-                XFree(state);
+                const int state = getWindowState(window);
+                if (state == IconicState)
+                    _glfwInputWindowIconify(window, GL_TRUE);
+                else if (state == NormalState)
+                    _glfwInputWindowIconify(window, GL_FALSE);
             }
 
             break;
@@ -1309,7 +1317,7 @@ static void processEvent(XEvent *event)
 
                             if (window->cursorMode == GLFW_CURSOR_DISABLED)
                             {
-                                if (_glfw.focusedWindow != window)
+                                if (!_glfwPlatformWindowFocused(window))
                                     break;
 
                                 x = data->event_x - window->x11.cursorPosX;
@@ -1644,6 +1652,23 @@ void _glfwPlatformHideWindow(_GLFWwindow* window)
     XFlush(_glfw.x11.display);
 }
 
+int _glfwPlatformWindowFocused(_GLFWwindow* window)
+{
+    return window->x11.handle == getFocusedWindow();
+}
+
+int _glfwPlatformWindowIconified(_GLFWwindow* window)
+{
+    return getWindowState(window) == IconicState;
+}
+
+int _glfwPlatformWindowVisible(_GLFWwindow* window)
+{
+    XWindowAttributes wa;
+    XGetWindowAttributes(_glfw.x11.display, window->x11.handle, &wa);
+    return wa.map_state == IsViewable;
+}
+
 void _glfwPlatformPollEvents(void)
 {
     int count = XPending(_glfw.x11.display);
@@ -1654,7 +1679,7 @@ void _glfwPlatformPollEvents(void)
         processEvent(&event);
     }
 
-    _GLFWwindow* window = _glfw.focusedWindow;
+    _GLFWwindow* window = findWindowByHandle(getFocusedWindow());
     if (window && window->cursorMode == GLFW_CURSOR_DISABLED)
     {
         int width, height;
